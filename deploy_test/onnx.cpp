@@ -1,18 +1,14 @@
 #include <chrono>
 #include <iostream>
 #include <onnxruntime_cxx_api.h>
-#include <opencv2/core/hal/interface.h>
-#include <opencv2/core/types.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgcodecs.hpp>
 #include <opencv2/opencv.hpp>
 #include <ostream>
 #include <ratio>
 #include <string>
 
-void	test();
+void test();
 cv::Mat pre_process();
-void	deploy();
+void deploy();
 
 int main() {
 	// test();
@@ -30,10 +26,10 @@ void test() {
 			  << std::endl;
 
 	// 检查是否支持 CUDA / CPU（取决于构建的 runtime）
-	auto				start = std::chrono::high_resolution_clock::now();
+	auto start = std::chrono::high_resolution_clock::now();
 	Ort::SessionOptions session_options;
-	Ort::Session		session(env, "model.onnx", session_options);
-	auto				end = std::chrono::high_resolution_clock::now();
+	Ort::Session session(env, "model.onnx", session_options);
+	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double, std::milli> duration = end - start;
 
 	std::cout << "模型成功加载：" << session.GetInputCount() << " 个输入；"
@@ -42,12 +38,12 @@ void test() {
 }
 cv::Mat pre_process() {
 	std::string input_path = "input/HCI_new_bedroom/";
-	cv::Mat		temp =
+	cv::Mat temp =
 		cv::imread(input_path + "view_03_03.png", cv::IMREAD_GRAYSCALE);
 	cv::Mat processed_image(temp.size() * 5, temp.type());
 	for (int i = 0; i < 25; i++) {
-		int			row		 = i / 5;
-		int			col		 = i % 5;
+		int row = i / 5;
+		int col = i % 5;
 		std::string filename = input_path + "view_0" + std::to_string(row + 1)
 							   + "_0" + std::to_string(col + 1) + ".png";
 		// std::cout << filename << std::endl;
@@ -68,7 +64,7 @@ void deploy() {
 	session_options.SetGraphOptimizationLevel(ORT_DISABLE_ALL);
 	session_options.DisableMemPattern();
 	// session_options.SetIntraOpNumThreads(1); // 单线程以避免线程池初始化干扰
-	auto		 start = std::chrono::high_resolution_clock::now();
+	auto start = std::chrono::high_resolution_clock::now();
 	Ort::Session session(env, "log/DistgSSR_2xSR_5x5.onnx", session_options);
 
 	auto end = std::chrono::high_resolution_clock::now();
@@ -82,7 +78,7 @@ void deploy() {
 
 	cv::Mat image = pre_process();
 	image.convertTo(image, CV_32FC(image.channels()), 1.0 / 255.0);
-	std::vector<float>	 input_data(image.begin<float>(), image.end<float>());
+	std::vector<float> input_data(image.begin<float>(), image.end<float>());
 	std::vector<int64_t> input_shape = {1, 1, 640, 640};
 
 	Ort::MemoryInfo memory_info = Ort::MemoryInfo::CreateCpu(
@@ -111,12 +107,12 @@ void deploy() {
 	auto output_tensors =
 		session.Run(Ort::RunOptions{nullptr}, input_names.data(), &input_tensor,
 					1, output_names.data(), 1);
-	end		 = std::chrono::high_resolution_clock::now();
+	end = std::chrono::high_resolution_clock::now();
 	duration = end - start;
 	std::cout << "推理耗时: " << duration.count() << " ms" << std::endl;
 	// 提取输出张量
 	Ort::Value& output_tensor = output_tensors[0];
-	float*		output_data	  = output_tensor.GetTensorMutableData<float>();
+	float* output_data = output_tensor.GetTensorMutableData<float>();
 
 	// 获取输出形状
 	auto output_shape = output_tensor.GetTensorTypeAndShapeInfo().GetShape();

@@ -15,12 +15,12 @@
 #include <torch/script.h> // One-stop header for loading TorchScript models
 #include <torch/torch.h>
 
-void		  test_print_info();
-void		  test_deploy();
+void test_print_info();
+void test_deploy();
 torch::Tensor load_data(const std::string& path, int angRes);
-void		  deploy(const std::string& path, int angRes, torch::Device device);
-void		  test_onnx();
-cv::Mat		  load_lf_sai(const std::string& path, int angRes);
+void deploy(const std::string& path, int angRes, torch::Device device);
+void test_onnx();
+cv::Mat load_lf_sai(const std::string& path, int angRes);
 
 int main() {
 	// test_print_info();
@@ -44,7 +44,7 @@ void deploy(const std::string& path, int angRes, torch::Device device) {
 	std::cout << input.sizes() << std::endl;
 
 	std::vector<torch::jit::IValue> inputs = {input};
-	torch::Tensor					output;
+	torch::Tensor output;
 
 	auto start = std::chrono::high_resolution_clock::now();
 	try {
@@ -64,9 +64,9 @@ void deploy(const std::string& path, int angRes, torch::Device device) {
 	// 5
 	cv::Mat center = cv::imread(path + "view_03_03.png", cv::IMREAD_GRAYSCALE);
 
-	int scale  = 2;			  // 超分倍数 (根据模型定义调整)
+	int scale = 2;			  // 超分倍数 (根据模型定义调整)
 	int height = center.rows; // 原始高度
-	int width  = center.cols; // 原始宽度
+	int width = center.cols;  // 原始宽度
 
 	output = output
 				 .view({angRes, height * scale, angRes,
@@ -91,8 +91,8 @@ void deploy(const std::string& path, int angRes, torch::Device device) {
 torch::Tensor load_data(const std::string& path, int angRes) {
 	cv::Mat first_image =
 		cv::imread(path + "/view_01_01.png", cv::IMREAD_GRAYSCALE);
-	int			  height = first_image.rows;
-	int			  width	 = first_image.cols;
+	int height = first_image.rows;
+	int width = first_image.cols;
 	torch::Tensor tensor =
 		torch::zeros({angRes, angRes, height, width}, torch::kFloat32);
 
@@ -131,14 +131,14 @@ void test_deploy() {
 	std::vector<torch::jit::IValue> inputs;
 
 	torch::Tensor input = torch::ones({1, 1, 640, 640});
-	input				= input.to(torch::kCPU);
+	input = input.to(torch::kCPU);
 	inputs.push_back(input); // 示例输入
 
 	// 执行推理
-	auto		  start	 = std::chrono::high_resolution_clock::now();
+	auto start = std::chrono::high_resolution_clock::now();
 	torch::Tensor output = module.forward(inputs).toTensor();
-	auto		  end	 = std::chrono::high_resolution_clock::now();
-	auto		  duration =
+	auto end = std::chrono::high_resolution_clock::now();
+	auto duration =
 		std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 	std::cout << "推理时间: " << duration.count() << " 毫秒" << std::endl;
 
