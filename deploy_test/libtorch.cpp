@@ -3,13 +3,10 @@
 #include <c10/core/DeviceType.h>
 #include <chrono>
 #include <iostream>
-#include <opencv2/core/hal/interface.h>
-#include <opencv2/dnn.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgcodecs.hpp>
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
 #include <string>
+#include <filesystem>
 #include <torch/csrc/jit/api/module.h>
 #include <torch/csrc/jit/serialization/import.h>
 #include <torch/script.h> // One-stop header for loading TorchScript models
@@ -25,10 +22,10 @@ cv::Mat load_lf_sai(const std::string& path, int angRes);
 int main() {
 	// test_print_info();
 	// test_deploy();
-	// std::string path   = "input/HCI_new_bedroom/";
-	// int			angRes = 5;
+	std::string path   = "input/HCI_new_bedroom/";
+	int			angRes = 5;
 	// deploy(path, angRes, torch::kCPU);
-	// deploy(path, angRes, torch::kMPS); // slow
+	deploy(path, angRes, torch::kCUDA); // slow
 
 	return 0;
 }
@@ -77,7 +74,7 @@ void deploy(const std::string& path, int angRes, torch::Device device) {
 
 	// 6
 	torch::Tensor temp = output[2][2];
-	if (device == torch::kMPS) {
+	if (device != torch::kCPU) {
 		temp = temp.to(torch::kCPU); // MPS 设备需要转换到 CPU
 	}
 	temp = temp.mul(255).clamp(0, 255).to(torch::kU8);

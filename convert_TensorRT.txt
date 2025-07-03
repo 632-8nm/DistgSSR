@@ -1,0 +1,1 @@
+trtexec --onnx=log/DistgSSR_2xSR_5x5.onnx --saveEngine=log/DistgSSR_2xSR_5x5.engine --fp16 --optShapes=input:1x1x640x640
